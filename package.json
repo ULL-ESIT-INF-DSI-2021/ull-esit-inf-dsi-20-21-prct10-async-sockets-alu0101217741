@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls && rm -rf .nyc_output",
+    "coverage": "nyc npm test && nyc report --reporter=lcov",
     "start": "tsc-watch --onSuccess \"node dist/index.js\"",
     "doc": "typedoc"
   },
@@ -26,7 +26,6 @@
     "@typescript-eslint/eslint-plugin": "^4.22.1",
     "@typescript-eslint/parser": "^4.22.1",
     "chai": "^4.3.4",
-    "coveralls": "^3.1.0",
     "eslint": "^7.25.0",
     "eslint-config-google": "^0.14.0",
     "mocha": "^8.3.2",
