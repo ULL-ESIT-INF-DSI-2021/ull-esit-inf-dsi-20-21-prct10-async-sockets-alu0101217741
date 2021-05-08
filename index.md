@@ -686,3 +686,181 @@ Cuando ya se ha realizado la operación solicitada por el cliente, hay que envia
 También se incluye un manejador para el evento `error` para que en caso de que se produzca algún error en la conexión, se pueda controlar adecuadamente. Además, se dispone de un manejador para el evento `close` que muestra en pantalla el mensaje `A client has disconnected.` cada vez que un cliente se desconecta del servidor.
 
 Por último, el método `listen` de **server** especifica que el servidor va a estar escuchando en el puerto TCP 60300, que se trata del puerto al que tendrán que conectarse los clientes.
+
+## 5. Pruebas unitarias realizadas
+
+Las pruebas unitarias desarrolladas para comprobar el correcto funcionamiento del código son las siguientes:
+
+**Pruebas unitarias de la clase Note:**
+
+```ts
+import 'mocha';
+import {expect} from 'chai';
+import {Note} from '../src/notes/note';
+
+
+describe('Note class tests', () => {
+  const note = new Note('test', 'Test note', 'This is a test note', 'green');
+
+  it('A Note class object can be successfully created', () => {
+    expect(note).not.to.be.equal(null);
+  });
+
+  it('Note.getUserName() returns test', () => {
+    expect(note.getUserName()).to.be.equal('test');
+  });
+
+  it('Note.getTitles() returns Test note', () => {
+    expect(note.getTitle()).to.be.equal('Test note');
+  });
+
+  it('Note.getBody() returns This is a test note', () => {
+    expect(note.getBody()).to.be.equal('This is a test note');
+  });
+
+  it('Note.getColor() returns green', () => {
+    expect(note.getColor()).to.be.equal('green');
+  });
+});
+```
+
+Como se puede observar, se crea un objeto **note** de la clase `Note` y se comprueba que este objeto no es nulo y que los getters funcionan correctamente.
+
+**Pruebas unitarias de la clase Database:**
+
+```ts
+import 'mocha';
+import {expect} from 'chai';
+import * as fs from 'fs';
+import {Database} from '../src/notes/database';
+import {Note} from '../src/notes/note';
+
+describe('Database class tests', () => {
+  const database = new Database();
+
+  it('A Database class object can be successfully created', () => {
+    expect(database).not.to.be.equal(null);
+  });
+
+  it('database.addNode() returns true', () => {
+    expect(database.addNote(new Note('test', 'Test note', 'This is a test note', 'green'))).to.be.equal(true);
+    expect(database.addNote(new Note('test', 'Test note 2', 'This is second a test note', 'blue'))).to.be.equal(true);
+  });
+
+  it('The note was created successfully', () => {
+    expect(fs.existsSync(`notes/test/Test note.json`)).to.be.equal(true);
+  });
+
+  it('database.addNote(new Note("test", "Test note", "This is a test note", "green") returns false', () => {
+    expect(database.addNote(new Note('test', 'Test note', 'This is a test note', 'green'))).to.be.equal(false);
+  });
+
+  it('database.modifyNote("test", "Test note", "Testing the modify method", "blue") returns true', () => {
+    expect(database.modifyNote('test', 'Test note', 'Testing the modify method', 'blue')).to.be.equal(true);
+  });
+
+  it('The file has been modified successfully', () => {
+    expect(fs.readFileSync(`notes/test/Test note.json`, {encoding: 'utf-8'})).to.be.equal('{"title": "Test note", "body": "Testing the modify method", "color": "blue"}');
+  });
+
+  it('database.modifyNote("test", "Non-existent file", "Testing the modify method", "blue") returns false', () => {
+    expect(database.modifyNote('test', 'Non-existent file', 'Testing the modify method', 'blue')).to.be.equal(false);
+  });
+
+  it('database.showNotes("test") returns [note2, note1]', () => {
+    const note1 = new Note('test', 'Test note', 'Testing the modify method', 'blue');
+    const note2 = new Note('test', 'Test note 2', 'This is second a test note', 'blue');
+    expect(database.showNotes('test')).to.be.eql([note2, note1]);
+  });
+
+  it('database.showNotes("Non-existent user") returns []', () => {
+    expect(database.showNotes('Non-existent user')).to.be.eql([]);
+  });
+
+  it('database.readNote("test", "Test note") returns the note with the title Test note', () => {
+    expect(database.readNote('test', 'Test note')).to.be.eql(new Note('test', 'Test note', 'Testing the modify method', 'blue'));
+  });
+
+  it('database.readNote("test", "Non-existent file") returns false', () => {
+    expect(database.readNote('test', 'Non-existent file')).to.be.equal(false);
+  });
+
+  it('database.removeNote("test", "Test note") returns true', () => {
+    expect(database.removeNote('test', 'Test note')).to.be.equal(true);
+  });
+
+  it('The note has been deleted successfully', () => {
+    expect(database.removeNote('test', 'Test note')).to.be.equal(false);
+    fs.rmdirSync('./notes', {recursive: true});
+  });
+});
+```
+
+Estas pruebas son similares a las que se realizaron en la [Práctica 8](https://github.com/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct08-filesystem-notes-app-alu0101217741.git) y permiten verificar que todos los métodos de la clase `Database` tienen un comportamiento adecuado.
+
+**Pruebas unitarias de la clase MessageEventEmitterClient:**
+
+```ts
+import 'mocha';
+import {expect} from 'chai';
+import {EventEmitter} from 'events';
+import {MessageEventEmitterClient} from '../src/client/messageEventEmitterClient';
+
+describe('MessageEventEmitterClient class tests', () => {
+  it('A message event is emitted when the entire message is received', (done) => {
+    const socket = new EventEmitter();
+    const client = new MessageEventEmitterClient(socket);
+
+    client.on('message', (message) => {
+      expect(message).to.be.eql({'title': 'Test note', 'body': 'This is a test note', 'color': 'green'});
+      done();
+    });
+
+    socket.emit('data', '{"title": "Test note",');
+    socket.emit('data', '"body": "This is a test note",');
+    socket.emit('data', '"color": "green"}');
+    socket.emit('end');
+  });
+});
+```
+
+
+En primer lugar, se crea un objeto `EventEmitter` apuntado por **socket**, este servirá para emular el socket por donde el servidor envía mensajes en trozos empleando la emisión de diferentes eventos de tipo `data`. También se define **client** que se trata de un objeto de la clase **MessageEventEmitterClient** que recibe como argumento del constructor el objeto **socket**. 
+
+Ahora se define un manejador para el evento `message` del objeto `MessageEventEmitterClient`, cabe destacar que este manejador se ejecuta cuando este objeto recibe un mensaje completo a través del socket emulado. Dentro del manejador se emplea la función `expect` de chai para comprobar que el objeto JSON que se recibe coincide con el contenido que se envió. Como el código es asíncrono, se invoca al manejador `done` que proporciona mocha para indicar que la prueba ha terminado.
+
+Con las cuatro últimas sentencias se emiten tres eventos de tipo `data`, cada uno de ellos con un trozo del mensaje, y un evento de tipo `end` para indicar que se ha terminado de enviar el mensaje.
+
+**Pruebas unitarias de la clase MessageEventEmitterServer:**
+
+```ts
+import 'mocha';
+import {expect} from 'chai';
+import {EventEmitter} from 'events';
+import {MessageEventEmitterServer} from '../src/server/messageEventEmitterServer';
+
+describe('MessageEventEmitterServer class tests', () => {
+  it('A request event is emitted when the entire message is received', (done) => {
+    const socket = new EventEmitter();
+    const server = new MessageEventEmitterServer(socket);
+
+    server.on('request', (message) => {
+      expect(message).to.be.eql({'title': 'Test note', 'body': 'This is a test note', 'color': 'green'});
+      done();
+    });
+
+    socket.emit('data', '{"title": "Test note",');
+    socket.emit('data', '"body": "This is a test note",');
+    socket.emit('data', '"color": "green"}');
+    socket.emit('data', '\n');
+  });
+});
+```
+
+Primero se crea el objeto **socket** de `EventEmitter`, que va a permitir emular el socket por donde el cliente envía mensajes. También se define **server** que es un objeto de la clase `MessageEventEmitterServer` y cuyo constructor recibe como parámetro el objeto **socket**.
+
+En este momento, se emplea un manejador para el evento `request`, este tipo de evento se produce cuando se recibe un mensaje completo por el socket emulado. En este manejador se utiliza la función `expect` para verificar que el mensaje recibido es igual al que se envió.
+
+Con las cuatro últimas sentencias se emiten cuatro eventos de tipo `data`, tres de ellos con un trozo del mensaje, y el último se utiliza para enviar el caracter `\n` que sirve para indicar que el mensaje se ha enviado completamente.
+
+
