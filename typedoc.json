@@ -1,6 +1,7 @@
 {
     "entryPoints": [
-      "./src/notes"
+      "./src/notes",
+      "./src/client"
     ],
     "out": "./docs"
 }
