@@ -36,7 +36,7 @@ describe('Database class tests', () => {
     expect(database.modifyNote('test', 'Non-existent file', 'Testing the modify method', 'blue')).to.be.equal(false);
   });
 
-  it('database.showNotes("test") returns [note1, note2]', () => {
+  it('database.showNotes("test") returns [note2, note1]', () => {
     const note1 = new Note('test', 'Test note', 'Testing the modify method', 'blue');
     const note2 = new Note('test', 'Test note 2', 'This is second a test note', 'blue');
     expect(database.showNotes('test')).to.be.eql([note2, note1]);
@@ -46,15 +46,15 @@ describe('Database class tests', () => {
     expect(database.showNotes('Non-existent user')).to.be.eql([]);
   });
 
-  it('note.readNote("test", "Test note") returns "Test note Testing the modify method"', () => {
+  it('database.readNote("test", "Test note") returns the note with the title Test note', () => {
     expect(database.readNote('test', 'Test note')).to.be.eql(new Note('test', 'Test note', 'Testing the modify method', 'blue'));
   });
 
-  it('note.readNote("test", "Non-existent file") returns false', () => {
+  it('database.readNote("test", "Non-existent file") returns false', () => {
     expect(database.readNote('test', 'Non-existent file')).to.be.equal(false);
   });
 
-  it('note.removeNote("test", "Test note") returns true', () => {
+  it('database.removeNote("test", "Test note") returns true', () => {
     expect(database.removeNote('test', 'Test note')).to.be.equal(true);
   });
 
