@@ -2,10 +2,20 @@ import * as fs from 'fs';
 import {Color} from '../types';
 import {Note} from './note';
 
-
+/**
+ * Class that manages the filesystem that contains the notes.
+ */
 export class Database {
+  /**
+   * Class constructor.
+   */
   constructor() {}
 
+  /**
+   * Method that allows adding a note to the list.
+   * @param note The note to be added.
+   * @returns true if the note has been added correctly, false if an error has occurred.
+   */
   addNote(note: Note): boolean {
     if (fs.existsSync(`notes/${note.getUserName()}/${note.getTitle()}.json`)) {
       return false;
@@ -20,6 +30,14 @@ export class Database {
     return true;
   }
 
+  /**
+   * Method that allows modifying a note in the list.
+   * @param userName The username to modify the note.
+   * @param title The title of the note.
+   * @param body The message that the note contains.
+   * @param color The color of the note.
+   * @returns true if the note has been modified correctly, false if an error has occurred.
+   */
   modifyNote(userName: string, title: string, body: string, color: Color): boolean {
     if (!fs.existsSync(`notes/${userName}/${title}.json`)) {
       return false;
@@ -29,6 +47,12 @@ export class Database {
     return true;
   }
 
+  /**
+   * Method to remove a note from the list.
+   * @param userName The username to remove the note.
+   * @param title The title of the note.
+   * @returns true if the note has been deleted correctly, false if an error has occurred.
+   */
   removeNote(userName: string, title: string): boolean {
     if (!fs.existsSync(`notes/${userName}/${title}.json`)) {
       return false;
@@ -37,6 +61,11 @@ export class Database {
     return true;
   }
 
+  /**
+   * Method that lists the titles of all a user's notes.
+   * @param userName The username to show the notes.
+   * @returns An array with the user's notes.
+   */
   showNotes(userName: string): Note[] {
     if (!fs.existsSync(`notes/${userName}`)) {
       return [];
@@ -51,6 +80,12 @@ export class Database {
     return arrayNote;
   }
 
+  /**
+   * Method that allows you to read a specific note from the list.
+   * @param userName The username to read a note.
+   * @param title The title of the note.
+   * @returns The note to be read or false if an error has occurred.
+   */
   readNote(userName: string, title: string): Note | boolean {
     if (!fs.existsSync(`notes/${userName}/${title}.json`)) {
       return false;
