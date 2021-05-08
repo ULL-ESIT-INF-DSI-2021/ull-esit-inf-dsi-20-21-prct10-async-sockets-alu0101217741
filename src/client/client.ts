@@ -25,7 +25,7 @@ let request: RequestType = {
 /**
  * Command to add a note to the list.
  */
-yargs.command({
+yargs.command( {
   command: 'add',
   describe: 'Add a new note',
   builder: {
@@ -51,11 +51,11 @@ yargs.command({
     },
   },
   handler(argv) {
-    if (typeof argv.user === 'string' && typeof argv.title === 'string' &&
-        typeof argv.body === 'string' && typeof argv.color === 'string') {
+    if (typeof argv.body === 'string' && typeof argv.title === 'string' &&
+        typeof argv.user === 'string' && typeof argv.color === 'string') {
       if (argv.color == 'red' || argv.color == 'green' ||
           argv.color == 'blue' || argv.color == 'yellow') {
-        request = {
+        request ={
           type: 'add',
           user: argv.user,
           title: argv.title,
@@ -63,7 +63,7 @@ yargs.command({
           color: argv.color,
         };
       } else {
-        console.log(chalk.bold.red('Note color must be red, green, blue, or yellow'));
+        console.log(chalk.bold.red('Note color must be red, green, yellow, or blue'));
       }
     }
   },
@@ -105,7 +105,7 @@ yargs.command({
     if (typeof argv.body === 'string' && typeof argv.color === 'string' &&
           typeof argv.user === 'string' && typeof argv.title === 'string') {
       if (argv.color != 'blue' && argv.color != 'red' && argv.color != 'yellow' && argv.color != 'green') {
-        console.log(chalk.bold.red('Note color must be red, green, blue, or yellow'));
+        console.log(chalk.bold.red('Note color must be red, green, blue, or yellow.'));
       } else {
         request = {
           type: 'modify',
@@ -138,7 +138,7 @@ yargs.command({
     },
   },
   handler(argv) {
-    if (typeof argv.user === 'string' && typeof argv.title === 'string') {
+    if (typeof argv.title === 'string' && typeof argv.user === 'string') {
       request = {
         type: 'remove',
         user: argv.user,
@@ -221,41 +221,41 @@ socket.on('message', (jsonRequest) => {
   switch (jsonRequest.type) {
     case 'add':
       if (jsonRequest.success) {
-        console.log(chalk.bold.green('New note added!'));
+        console.log( chalk.bold.green('New note added!'));
       } else {
-        console.log(chalk.bold.red('Note title taken!'));
+        console.log(chalk.bold.red('Note title taken! '));
       }
       break;
     case 'modify':
-      if (jsonRequest.success) {
-        console.log(chalk.bold.green('Note modified!'));
+      if ( jsonRequest.success) {
+        console.log(chalk.bold.green( 'Note modified!'));
       } else {
-        console.log(chalk.bold.red('The note you want to modify does not exist!'));
+        console.log( chalk.bold.red('The note you want to modify does not exist!'));
       }
       break;
     case 'remove':
-      if (jsonRequest.success) {
-        console.log(chalk.bold.green('Note removed!'));
+      if (jsonRequest.success ) {
+        console.log(chalk.bold.green('Note removed!') );
       } else {
-        console.log(chalk.bold.red('Note not found'));
+        console.log( chalk.bold.red('Note not found'));
       }
       break;
     case 'list':
       if (jsonRequest.success) {
-        console.log('Your notes');
+        console.log('Your notes' );
         jsonRequest.notes.forEach((note: any) => {
-          console.log(chalk.bold.keyword(note.color)(note.title));
+          console.log( chalk.bold.keyword(note.color)(note.title));
         });
       } else {
-        console.log(chalk.bold.red('You have never saved a note'));
+        console.log(chalk.bold.red('You have never saved a note') );
       }
       break;
     case 'read':
       if (jsonRequest.success) {
-        console.log(chalk.bold.keyword(jsonRequest.notes[0].color)(jsonRequest.notes[0].title +
+        console.log( chalk.bold.keyword(jsonRequest.notes[0].color)(jsonRequest.notes[0].title +
                                                       '\n' + jsonRequest.notes[0].body));
       } else {
-        console.log(chalk.bold.red('Note not found'));
+        console.log( chalk.bold.red('Note not found') );
       }
       break;
     default:
@@ -267,6 +267,6 @@ socket.on('message', (jsonRequest) => {
 /**
  * If there is an error in the connection it is handled properly.
  */
-client.on('error', (err) => {
-  console.log(`Connection could not be established: ${err.message}`);
+client.on( 'error', (err) => {
+  console.log(`Connection could not be established: ${err.message}` );
 });
