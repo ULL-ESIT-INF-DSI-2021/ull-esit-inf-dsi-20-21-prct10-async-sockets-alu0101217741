@@ -193,7 +193,7 @@ export class Database {
 
 Este código es similar a la clase `Note` que se utilizó en la [Práctica 8](https://github.com/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct08-filesystem-notes-app-alu0101217741.git) con la diferencia de que ahora en los métodos en lugar de mostrar un mensaje por consola, se retorna algún valor que indica si la operación se ha realizado con éxito. Esto se hace porque la clase Database va a ser utilizada desde el servidor por lo que únicamente se desea saber si la operación se ha realizado correctamente y así poder informar al cliente, quien debe ser el encargado de mostrar en pantalla diferentes mensajes en función de la respuesta recibida.
 
-### 4.1. Directorio client
+### 4.2. Directorio client
 
 **Código de la clase MessageEventEmitterClient:**
 
@@ -522,3 +522,167 @@ Como un objeto `MessageEventEmitterClient` puede emitir eventos del tipo `messag
 
 Por último, se utiliza un manejador que se ejecuta con un evento `error` para que en caso de que se produzca un error en la conexión, se pueda gestionar adecuadamente.
 
+### 4.3. Directorio server
+
+**Código de la clase MessageEventEmitterServer:**
+
+```ts
+import {EventEmitter} from 'events';
+
+/**
+ * Class that emits a request event when it receives a complete message.
+ */
+export class MessageEventEmitterServer extends EventEmitter {
+  /**
+   * Constructor of the class that receives portions of a message with the data event,
+   * and when the message includes \n it means that the complete message has been
+   * received so a request event is emitted.
+   * @param connection An object of the EventEmitter class to be used as a socket.
+   */
+  constructor(connection: EventEmitter) {
+    super();
+
+    let wholeMessage = '';
+    connection.on('data', (messageChunk) => {
+      wholeMessage += messageChunk;
+
+      let messageLimit = wholeMessage.indexOf('\n');
+      while (messageLimit !== -1) {
+        const message = wholeMessage.substring(0, messageLimit);
+        wholeMessage = wholeMessage.substring(messageLimit + 1);
+        this.emit('request', JSON.parse(message));
+        messageLimit = wholeMessage.indexOf('\n');
+      }
+    });
+  }
+}
+```
+
+**Explicación del código:**
+
+Esta clase que hereda de `EventEmitter` es utilizada por el servidor para poder comunicarse adecuadamente con el cliente, ya que es capaz de emitir un evento de tipo `request` con cada recepción de una petición completa enviada por el cliente a través del socket correspondiente. 
+
+El constructor tiene como parámetro **connection** que se trata de un objeto `EventEmitter`. Dentro de este constructor se utiliza un manejador que se ejecuta con cada emisión del evento `data`, de forma que se almacena en la variable **wholeMessage** un mensaje completo recibido a trozos desde el servidor. Como cada mensaje enviado desde el cliente finaliza con el caracter `\n` se trata de encontrar dicho carácter en **wholeMessage**. Cuando se ha recibido un mensaje completo, esto es, que en **wholeMessage** existe un caracter `\n`, un objeto `MessageEventEmitterServer` emitirá un evento de tipo `request` junto con un objeto JSON que incluye el mensaje completo que se ha recibido.
+
+**Código del fichero server:**
+
+```ts
+import * as net from 'net';
+import * as chalk from 'chalk';
+import {ResponseType} from '../types';
+import {Database} from '../notes/database';
+import {Note} from '../notes/note';
+import {MessageEventEmitterServer} from './messageEventEmitterServer';
+
+/**
+ * A server is created with the net module of Node.js.
+ */
+const server = net.createServer((connection) => {
+  /**
+   * An object of class MessageEventEmitterServer is created.
+   */
+  const socket = new MessageEventEmitterServer(connection);
+
+  console.log(chalk.bold.green('A client has connected.'));
+
+  /**
+   * When the request event is received, the message sent by the client is processed.
+   */
+  socket.on('request', (note) => {
+    const database = new Database();
+    const response: ResponseType = {
+      type: 'add',
+      success: true,
+    };
+    switch (note.type) {
+      case 'add':
+        const newNote = new Note(note.user, note.title, note.body, note.color);
+        if (!database.addNote(newNote)) {
+          response.success = false;
+        }
+        break;
+      case 'modify':
+        response.type = 'modify';
+        if (!database.modifyNote(note.user, note.title, note.body, note.color)) {
+          response.success = false;
+        }
+        break;
+      case 'remove':
+        response.type = 'remove';
+        if (!database.removeNote(note.user, note.title)) {
+          response.success = false;
+        }
+        break;
+      case 'list':
+        response.type = 'list';
+        const listNotes: Note[] = database.showNotes(note.user);
+        if (listNotes.length == 0) {
+          response.success = false;
+        } else {
+          response.notes = listNotes;
+        }
+        break;
+      case 'read':
+        response.type = 'read';
+        const noteContent = database.readNote(note.user, note.title);
+        if (noteContent == false) {
+          response.success = false;
+        } else if (typeof noteContent !== 'boolean') {
+          response.notes = [noteContent];
+        }
+        break;
+      default:
+        console.log(chalk.bold.red('The type of message is wrong'));
+        break;
+    }
+
+    /**
+     * The response is sent to the client.
+     */
+    connection.write(JSON.stringify(response), (error) => {
+      if (error) {
+        console.log(chalk.bold.red('The response has not been sent to the client.'));
+      } else {
+        console.log(chalk.bold.green('The response has been sent to the client.'));
+        connection.end();
+      }
+    });
+  });
+
+  /**
+   * If there is an error in the connection it is handled properly.
+   */
+  connection.on('error', (err) => {
+    if (err) {
+      console.log(`Connection could not be established: ${err.message}`);
+    }
+  });
+
+  /**
+   * When a client disconnects a message informing about this is displayed
+   * on the server.
+   */
+  connection.on('close', () => {
+    console.log(chalk.bold.green('A client has disconnected.\n'));
+  });
+});
+
+/**
+ * The server is listening on port 60300.
+ */
+server.listen(60300, () => {
+  console.log(chalk.bold.green('Waiting for clients to connect...\n'));
+});
+```
+
+**Explicación del código:**
+
+En primer lugar, se utiliza el método `createServer` del módulo `net` que recibe como parámetro un manejador y devuelve un objeto `Server`. El parámetro **connection** del manejador, es un objeto `Socket` que va a permitir comunicar el servidor con los clientes.
+
+Dentro del manejador se define la constante **socket** que es un objeto de la clase `MessageEventEmitterServer`. Este constante se emplea para definir un manejador que se ejecuta cada vez que se recibe un evento `request`, es decir, cuando se recibe una respuesta completa del servidor. Cuando esto sucede, se crea **database** que es un objeto de la clase `Database` y que se va a emplear para trabajar con el sistema de ficheros. Tras ello, se crea la constante **response** que se trata de la respuesta que se va a enviar al servidor, por defecto está establecida que es de tipo `add` y se ha realizado con éxito. Una vez hecho esto, se analiza la propiedad `type` de **note** para saber el tipo de petición que ha realizado el cliente, en función de su valor y lo que devuelvan los métodos de la clase `Database` se establecen correctamente las propiedades de **response**.
+
+Cuando ya se ha realizado la operación solicitada por el cliente, hay que enviarle una respuesta. Para ello, se utiliza el método `write`, si la respuesta se envía correctamente el servidor cierre mediante `connection.end()` el lado del cliente del socket.
+
+También se incluye un manejador para el evento `error` para que en caso de que se produzca algún error en la conexión, se pueda controlar adecuadamente. Además, se dispone de un manejador para el evento `close` que muestra en pantalla el mensaje `A client has disconnected.` cada vez que un cliente se desconecta del servidor.
+
+Por último, el método `listen` de **server** especifica que el servidor va a estar escuchando en el puerto TCP 60300, que se trata del puerto al que tendrán que conectarse los clientes.
