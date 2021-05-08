@@ -863,4 +863,11 @@ En este momento, se emplea un manejador para el evento `request`, este tipo de e
 
 Con las cuatro últimas sentencias se emiten cuatro eventos de tipo `data`, tres de ellos con un trozo del mensaje, y el último se utiliza para enviar el caracter `\n` que sirve para indicar que el mensaje se ha enviado completamente.
 
+## 7. Conclusiones
+
+En conclusión, esta práctica me ha permitido familiarizarme con el módulo `net` de Node.js, con el que he sido capaz de crear servicios basados en sockets, de manera que el servidor que he implementado resuelve las peticiones solicitadas por el cliente. Además, gracias a la clase `EventEmitter` del módulo `Events` he conseguido que servidor y cliente se comuniquen de forma adecuada. Cabe destacar que ya había implementado sockets en otros lenguajes de programación como C++, sin embargo, me ha resultado más sencillo realizar esto en **TypeScript**.
+
+Además, me ha parecido interesante que se puedan emitir los tipos de eventos que se deseen, como el caso de `request` en esta práctica, ya que con esto se disponen de muchas posibilidades cuando se programa.
+
+Por último, pienso que aprender estas herramientas es muy importante para conseguir avanzar como desarrolladores, ya que conocer cómo funcionan y se comunican servidores y clientes es fundamental para programar aplicaciones.
 
