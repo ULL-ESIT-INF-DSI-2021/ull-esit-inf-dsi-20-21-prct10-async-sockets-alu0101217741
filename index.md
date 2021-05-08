@@ -14,3 +14,10 @@ Los objetivos de esta práctica son:
 
 * Aprender a utilizar el módulo net de Node.js.
 * Aprender a utilizar la clase EventEmitter del módulo Events de Node.js.
+
+## 3. Tareas previas
+
+Antes de empezar con la práctica hay que realizar las siguientes tareas:
+
+1. Aceptar la [asignación de GitHub Classroom](https://classroom.github.com/assignment-invitations/86449c6e8761262c57246a986902a9e8/status) asociada a esta práctica.
+2. Leer la documentación sobre el [módulo net de Node.js](https://nodejs.org/dist/latest-v16.x/docs/api/net.html) y la clase  [EventEmitter del módulo Events de Node.js](https://nodejs.org/dist/latest-v16.x/docs/api/events.html#events_class_eventemitter).
