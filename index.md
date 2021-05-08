@@ -227,7 +227,7 @@ export class MessageEventEmitterClient extends EventEmitter {
 
 **Explicación del código:**
 
-Esta clase que hereda de `EventEmitter` será utilizada por el el cliente para poder comunicarse adecuadamente con el servidor, debido a que es capaz de emitir un evento de tipo `message` con cada recepción de un mensaje completo enviado por el servidor a través del socket correspondiente. 
+Esta clase que hereda de `EventEmitter` será utilizada por el cliente para poder comunicarse adecuadamente con el servidor, debido a que es capaz de emitir un evento de tipo `message` con cada recepción de un mensaje completo enviado por el servidor a través del socket correspondiente. 
 
 En el constructor se tiene como parámetro un objeto `EventEmitter` apuntado por **connection**. Sobre este objeto se registra un manejador que se ejecutará con cada emisión del evento `data`, de forma que se almacena en **wholeResponse** un mensaje completo recibido a trozos desde el servidor.
 
@@ -512,7 +512,7 @@ client.on( 'error', (err) => {
 
 **Explicación del código:**
 
-Este código incluye los mismos comandos que se tenían en el fichero `note-app.ts` de la [Práctica 8](https://github.com/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct08-filesystem-notes-app-alu0101217741). Pero ahora primero se utiliza la función `connect` el módulo `net` de **Node.js**, que recibe un objeto con información sobre la conexión que se desea establecer y devuelve un objeto `Socket`, el cual queda apuntado por **client**. Tras ello, se crea el objeto **socket** de la clase `MessageEventEmitterClient` que va a permitir procesar de manera adecuada la respuesta del servidor cuando esta se haya recibido completamente. 
+Este código incluye los mismos comandos que se tenían en el fichero `note-app.ts` de la [Práctica 8](https://github.com/ULL-ESIT-INF-DSI-2021/ull-esit-inf-dsi-20-21-prct08-filesystem-notes-app-alu0101217741). Pero ahora primero se utiliza la función `connect` del módulo `net` de **Node.js**, que recibe un objeto con información sobre la conexión que se desea establecer y devuelve un objeto `Socket`, el cual queda apuntado por **client**. Tras ello, se crea el objeto **socket** de la clase `MessageEventEmitterClient` que va a permitir procesar de manera adecuada la respuesta del servidor cuando esta se haya recibido completamente. 
 
 Una vez hecho esto, se define **request** cuyo tipo es `RequestType` y que incluye los elementos que debe tener una petición en función del comando que ejecute el cliente. Por tanto, empleando `yargs` se gestionan los diferentes comandos que se pueden utilizar y según el que se haya ejecutado se establecen correctamente los valores de las propiedades de **request**.
 
@@ -679,13 +679,50 @@ server.listen(60300, () => {
 
 En primer lugar, se utiliza el método `createServer` del módulo `net` que recibe como parámetro un manejador y devuelve un objeto `Server`. El parámetro **connection** del manejador, es un objeto `Socket` que va a permitir comunicar el servidor con los clientes.
 
-Dentro del manejador se define la constante **socket** que es un objeto de la clase `MessageEventEmitterServer`. Este constante se emplea para definir un manejador que se ejecuta cada vez que se recibe un evento `request`, es decir, cuando se recibe una respuesta completa del servidor. Cuando esto sucede, se crea **database** que es un objeto de la clase `Database` y que se va a emplear para trabajar con el sistema de ficheros. Tras ello, se crea la constante **response** que se trata de la respuesta que se va a enviar al servidor, por defecto está establecida que es de tipo `add` y se ha realizado con éxito. Una vez hecho esto, se analiza la propiedad `type` de **note** para saber el tipo de petición que ha realizado el cliente, en función de su valor y lo que devuelvan los métodos de la clase `Database` se establecen correctamente las propiedades de **response**.
+Dentro del manejador se define la constante **socket** que es un objeto de la clase `MessageEventEmitterServer`. Esta constante se emplea para definir un manejador que se ejecuta cada vez que se recibe un evento `request`, es decir, cuando se recibe una petición completa del cliente. Cuando esto sucede, se crea **database** que es un objeto de la clase `Database` y que se va a emplear para trabajar con el sistema de ficheros. Tras ello, se crea la constante **response** que se trata de la respuesta que se va a enviar al cliente, por defecto está establecida que es de tipo `add` y se ha realizado con éxito. Una vez hecho esto, se analiza la propiedad `type` de **note** para saber el tipo de petición que ha realizado el cliente, en función de su valor y lo que devuelvan los métodos de la clase `Database` se establecen correctamente las propiedades de **response**.
 
-Cuando ya se ha realizado la operación solicitada por el cliente, hay que enviarle una respuesta. Para ello, se utiliza el método `write`, si la respuesta se envía correctamente el servidor cierre mediante `connection.end()` el lado del cliente del socket.
+Cuando ya se ha realizado la operación solicitada por el cliente, hay que enviarle una respuesta. Para ello, se utiliza el método `write`, si la respuesta se envía correctamente el servidor cierra mediante `connection.end()` el lado del cliente del socket.
 
 También se incluye un manejador para el evento `error` para que en caso de que se produzca algún error en la conexión, se pueda controlar adecuadamente. Además, se dispone de un manejador para el evento `close` que muestra en pantalla el mensaje `A client has disconnected.` cada vez que un cliente se desconecta del servidor.
 
 Por último, el método `listen` de **server** especifica que el servidor va a estar escuchando en el puerto TCP 60300, que se trata del puerto al que tendrán que conectarse los clientes.
+
+### 4.4. Fichero types
+
+**Código del fichero types:**
+
+```ts
+import {Note} from './notes/note';
+
+/**
+ * Type representing the colors accepted by the system.
+ */
+export type Color = 'red' | 'green' |'blue' | 'yellow';
+
+/**
+ * Type that represents the elements that a request message must include.
+ */
+export type RequestType = {
+    type: 'add' | 'modify' | 'remove' | 'list' | 'read';
+    user: string;
+    title?: string;
+    body?: string;
+    color?: Color;
+  }
+
+/**
+ * Type that represents the elements that a response message should include.
+ */
+export type ResponseType = {
+    type: 'add' | 'modify' | 'remove' | 'read' | 'list';
+    success: boolean;
+    notes?: Note[];
+}
+```
+
+**Explicación del código:**
+
+En el fichero `types.ts` se definen tres tipos de datos (`Color`, `RequestType` y `ResponseType`) que se utilizan en la implementación del cliente y servidor para la aplicación de procesamiento de notas de texto.
 
 ## 5. Pruebas unitarias realizadas
 
@@ -871,3 +908,9 @@ Además, me ha parecido interesante que se puedan emitir los tipos de eventos qu
 
 Por último, pienso que aprender estas herramientas es muy importante para conseguir avanzar como desarrolladores, ya que conocer cómo funcionan y se comunican servidores y clientes es fundamental para programar aplicaciones.
 
+## 8. Bibliografía
+
+* [Documentación del módulo net de Node.js](https://nodejs.org/dist/latest-v16.x/docs/api/net.html)
+* [Documentación de la clase EventEmitter del módulo Events de Node.js](https://nodejs.org/dist/latest-v16.x/docs/api/events.html#events_class_eventemitter)
+* [Documentación del paquete yargs](https://www.npmjs.com/package/yargs)
+* [Documentación del paquete chalk](https://www.npmjs.com/package/chalk)
