@@ -4,14 +4,27 @@ import * as net from 'net';
 import {MessageEventEmitterClient} from './messageEventEmitterClient';
 import {RequestType} from '../types';
 
+/**
+ * A client connected to port 60300 of the server is created.
+ */
 const client = net.connect({port: 60300});
+
+/**
+ * An object of class MessageEventEmitterClient is created.
+ */
 const socket = new MessageEventEmitterClient(client);
 
+/**
+ * The request message is by default of type add.
+ */
 let request: RequestType = {
   type: 'add',
   user: '',
 };
 
+/**
+ * Command to add a note to the list.
+ */
 yargs.command({
   command: 'add',
   describe: 'Add a new note',
@@ -56,6 +69,9 @@ yargs.command({
   },
 });
 
+/**
+ * Command to modify a note in the list.
+ */
 yargs.command({
   command: 'modify',
   describe: 'Modify a note',
@@ -103,6 +119,9 @@ yargs.command({
   },
 });
 
+/**
+ * Command to remove a note from the list.
+ */
 yargs.command({
   command: 'remove',
   describe: 'Delete a note',
@@ -129,6 +148,9 @@ yargs.command({
   },
 });
 
+/**
+ * Command to list the titles of a user's notes.
+ */
 yargs.command({
   command: 'list',
   describe: 'List the titles of the notes',
@@ -149,6 +171,9 @@ yargs.command({
   },
 });
 
+/**
+ * Command to read a specific note from the list.
+ */
 yargs.command({
   command: 'read',
   describe: 'Read a specific note from the list',
@@ -175,14 +200,23 @@ yargs.command({
   },
 });
 
+/**
+ * Process the arguments passed from the command line to the application.
+ */
 yargs.parse();
 
+/**
+ * The message is sent to the server.
+ */
 client.write(JSON.stringify(request) + `\n`, (err) => {
   if (err) {
     console.log(chalk.bold.red('The note could not be sent to the server.'));
   }
 });
 
+/**
+ * When the message event is received, the response sent by the server is processed.
+ */
 socket.on('message', (jsonRequest) => {
   switch (jsonRequest.type) {
     case 'add':
@@ -230,6 +264,9 @@ socket.on('message', (jsonRequest) => {
   }
 });
 
+/**
+ * If there is an error in the connection it is handled properly.
+ */
 client.on('error', (err) => {
   console.log(`Connection could not be established: ${err.message}`);
 });
